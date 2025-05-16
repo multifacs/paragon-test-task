@@ -1,0 +1,1 @@
+0 */3 * * * /root/paragon-test-task/script/env/bin/python /root/paragon-test-task/script/tickets.py

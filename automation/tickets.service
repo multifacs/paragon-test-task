@@ -1,0 +1,8 @@
+[Unit]
+Description=Tickets Report Service
+Wants=tickets.timer
+
+[Service]
+Type=oneshot
+ExecStart=/root/paragon-test-task/script/env/bin/python /root/paragon-test-task/script/tickets.py
+WorkingDirectory=/root/paragon-test-task/script

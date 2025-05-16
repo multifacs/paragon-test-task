@@ -9,7 +9,7 @@
 
 Список тикетов:
 
-```
+```json
 tickets = [
     {"id": 1, "category": "customer_service", "status": "open"},
     {"id": 2, "category": "technical", "status": "closed"},
@@ -30,11 +30,14 @@ Mock API написано на NodeJS+Express и генерирует списо
 
 Запуск:
 
-```
+```bash
 cd mock-api
 docker build --tag ticket-api .
 docker run -d -p 3000:3000 ticket-api
 ```
+
+Исходный код:
+https://github.com/multifacs/paragon-test-task/blob/master/mock-api/index.js
 
 ### tickets.py
 
@@ -42,7 +45,7 @@ docker run -d -p 3000:3000 ticket-api
 
 Запуск:
 
-```
+```bash
 cd script
 python3 -m venv env
 source ./env/bin/activate
@@ -51,8 +54,8 @@ pip install -r requirements.txt
 
 Использование:
 
-```
-python3 tickets.py --api http://localhost:3000/tickets --log /root/paragon-test-task/logs --uuid
+```bash
+python tickets.py --api http://localhost:3000/tickets --log /root/paragon-test-task/logs --uuid
 ```
 
 Флаги:
@@ -64,6 +67,7 @@ python3 tickets.py --api http://localhost:3000/tickets --log /root/paragon-test-
 
 Пример лога в принте:
 
+```
 📊 Отчёт по тикетам
 
 Открытые тикеты: 6
@@ -78,10 +82,11 @@ python3 tickets.py --api http://localhost:3000/tickets --log /root/paragon-test-
   - customer_service: 5
   - billing: 2
   - technical: 3
+```
 
 Пример лога в файле:
 
-```
+```json
 {
     "open": {
         "tickets": [
@@ -124,4 +129,68 @@ python3 tickets.py --api http://localhost:3000/tickets --log /root/paragon-test-
         "technical": 3
     }
 }
+```
+
+Исходный код:
+https://github.com/multifacs/paragon-test-task/blob/master/script/tickets.py
+
+### Автоматизация
+
+Задача: запускать скрипт каждые 3 часа. Это можно реализовать несколькими способами.
+
+1. Банально прописать в скрипте `while True` и `sleep(3 * 60 * 60)`
+2. Создать демон в `systemd` и таймер к нему
+3. Воспользоваться планировщиком `cron`
+
+#### systemd
+
+`/etc/systemd/system/tickets.service`
+```ini
+[Unit]
+Description=Tickets Report Service
+Wants=tickets.timer
+
+[Service]
+Type=oneshot
+ExecStart=/root/paragon-test-task/script/env/bin/python /root/paragon-test-task/script/tickets.py
+WorkingDirectory=/root/paragon-test-task/script
+```
+
+`/etc/systemd/system/tickets.timer`
+```ini
+[Unit]
+Description=Run Tickets Report Service every 3 hours
+
+[Timer]
+# Вариант 1 - запуск на старте таймера через 10 сек + каждые 3 часа
+OnBootSec=10s
+OnUnitActiveSec=3h
+
+# Вариант 2 - запуск каждые 3 часа начиная с 00:00
+OnCalendar=0/3:00:00
+
+AccuracySec=1m
+Unit=tickets.service
+
+[Install]
+WantedBy=timers.target
+```
+
+Запуск:
+```bash
+systemctl daemon-reload
+systemctl enable --now tickets.timer
+```
+
+#### cron
+
+Добавление новых задач в `cron` делается через команду:
+
+```
+crontab -e
+```
+
+Запуск каждые 3 часа в 00 минут:
+```
+0 */3 * * * /root/paragon-test-task/script/env/bin/python /root/paragon-test-task/script/tickets.py
 ```

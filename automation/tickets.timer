@@ -1,0 +1,16 @@
+[Unit]
+Description=Run Tickets Report Service every 3 hours
+
+[Timer]
+# Вариант 1 - запуск через 10 сек + каждые 3 часа
+# OnBootSec=10s
+# OnUnitActiveSec=3h
+
+# Вариант 2 - запуск каждые 3 часа начиная с 00:00
+OnCalendar=0/3:00:00
+
+AccuracySec=1m
+Unit=tickets.service
+
+[Install]
+WantedBy=timers.target
