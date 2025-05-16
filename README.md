@@ -9,7 +9,7 @@
 
 Список тикетов:
 
-```json
+```js
 tickets = [
     {"id": 1, "category": "customer_service", "status": "open"},
     {"id": 2, "category": "technical", "status": "closed"},
